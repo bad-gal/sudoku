@@ -22,6 +22,7 @@ class bootGame extends Phaser.Scene{
     this.load.image("7", "assets/sprites/7.png");
     this.load.image("8", "assets/sprites/8.png");
     this.load.image("9", "assets/sprites/9.png");
+    this.load.image("line", "assets/sprites/line.png");
   }
   create(){
     this.scene.start("PlayGame");
@@ -33,6 +34,7 @@ class playGame extends Phaser.Scene{
   }
   create(){
     this.addTilesToScreen();
+    this.addLinesToScreen();
     var pos = this.getTilePosition(1,0);
     var num = this.add.image(pos.x, pos.y, "1").setInteractive();
     this.input.setDraggable(num);
@@ -58,6 +60,27 @@ class playGame extends Phaser.Scene{
     var offsetY = (game.config.height - boardHeight) / 2;
     posY += offsetY;
     return new Phaser.Geom.Point(posX, posY);
+  }
+  addLinesToScreen(){
+    //vertical lines
+    var pos = this.getTilePosition(4,0);
+    this.add.image(pos.x - gameOptions.tileSize + (gameOptions.tileSize / 2) , pos.y, "line").setScale(1, 9.6);
+    pos = this.getTilePosition(4,2);
+    this.add.image(pos.x + (gameOptions.tileSize / 2) + (gameOptions.tileSpacing / 2), pos.y, "line").setScale(1, 9.6);
+    pos = this.getTilePosition(4,5);
+    this.add.image(pos.x + (gameOptions.tileSize / 2) + (gameOptions.tileSpacing / 2), pos.y, "line").setScale(1, 9.6);
+    pos = this.getTilePosition(4,8);
+    this.add.image(pos.x + (gameOptions.tileSize / 2), pos.y, "line").setScale(1, 9.6);
+
+    //horizontal lines
+    pos = this.getTilePosition(0,4);
+    this.add.image(pos.x, pos.y - gameOptions.tileSize - gameOptions.tileSpacing + (gameOptions.tileSize / 2) + (gameOptions.tileSpacing / 2), "line").setScale(1, 9.6).setAngle(90);
+    pos = this.getTilePosition(2,4);
+    this.add.image(pos.x, pos.y + (gameOptions.tileSize / 2) + (gameOptions.tileSpacing / 2), "line").setScale(1, 9.6).setAngle(90);
+    pos = this.getTilePosition(5,4);
+    this.add.image(pos.x, pos.y + (gameOptions.tileSize / 2) + (gameOptions.tileSpacing / 2), "line").setScale(1, 9.6).setAngle(90);
+    pos = this.getTilePosition(8,4);
+    this.add.image(pos.x, pos.y + (gameOptions.tileSize / 2) + (gameOptions.tileSpacing / 2), "line").setScale(1, 9.6).setAngle(90);
   }
   addTilesToScreen(){
     var sudokuMap = this.createSolution();
