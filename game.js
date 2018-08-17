@@ -34,7 +34,18 @@ class playGame extends Phaser.Scene{
   create(){
     this.addTilesToScreen();
     var pos = this.getTilePosition(1,0);
-    this.add.image(pos.x, pos.y, "1");
+    var num = this.add.image(pos.x, pos.y, "1").setInteractive();
+    this.input.setDraggable(num);
+    this.input.on('dragstart', function (pointer, gameObject) {
+        gameObject.setTint(0xff0000);
+    });
+    this.input.on('drag', function (pointer, gameObject, dragX, dragY) {
+        gameObject.x = dragX;
+        gameObject.y = dragY;
+    });
+    this.input.on('dragend', function (pointer, gameObject) {
+        gameObject.clearTint();
+    });
   }
   /*
     Get the tile position dependant on the row and column specified
