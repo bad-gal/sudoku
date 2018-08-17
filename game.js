@@ -1,10 +1,10 @@
-var game;
-var gameOptions = {
+let game;
+const gameOptions = {
     tileSize: 288,
     tileSpacing: 20,
-    boardSize: { rows: 9, cols: 9 },
+    boardSize: {rows: 9, cols: 9},
     tweenSpeed: 50,
-    aspectRatio: 16/9
+    aspectRatio: 16 / 9
 };
 
 class bootGame extends Phaser.Scene{
@@ -35,51 +35,37 @@ class playGame extends Phaser.Scene{
   create(){
     this.addTilesToScreen();
     this.addLinesToScreen();
-    var pos = this.getTilePosition(1,0);
-    var num = this.add.image(pos.x, pos.y, "1").setInteractive();
-    this.input.setDraggable(num);
-    this.input.on('dragstart', function (pointer, gameObject) {
-        gameObject.setTint(0xff0000);
-    });
-    this.input.on('drag', function (pointer, gameObject, dragX, dragY) {
-        gameObject.x = dragX;
-        gameObject.y = dragY;
-    });
-    this.input.on('dragend', function (pointer, gameObject) {
-        gameObject.clearTint();
-    });
   }
   /*
     Get the tile position dependant on the row and column specified
   */
-  getTilePosition(row, col){
+  static getTilePosition(row, col){
     var posX = gameOptions.tileSpacing * (col + 1) + gameOptions.tileSize * (col + 0.5);
     var posY = gameOptions.tileSpacing * (row + 1) + gameOptions.tileSize * (row + 0.5);
     var boardHeight = gameOptions.boardSize.rows * gameOptions.tileSize;
     boardHeight += (gameOptions.boardSize.rows + 1) * gameOptions.tileSpacing;
-    var offsetY = (game.config.height - boardHeight) / 2;
-    posY += offsetY;
+    posY += (game.config.height - boardHeight) / 2;
     return new Phaser.Geom.Point(posX, posY);
   }
   addLinesToScreen(){
     //vertical lines
-    var pos = this.getTilePosition(4,0);
+    var pos = playGame.getTilePosition(4,0);
     this.add.image(pos.x - gameOptions.tileSize + (gameOptions.tileSize / 2) , pos.y, "line").setScale(1, 9.6);
-    pos = this.getTilePosition(4,2);
+    pos = playGame.getTilePosition(4,2);
     this.add.image(pos.x + (gameOptions.tileSize / 2) + (gameOptions.tileSpacing / 2), pos.y, "line").setScale(1, 9.6);
-    pos = this.getTilePosition(4,5);
+    pos = playGame.getTilePosition(4,5);
     this.add.image(pos.x + (gameOptions.tileSize / 2) + (gameOptions.tileSpacing / 2), pos.y, "line").setScale(1, 9.6);
-    pos = this.getTilePosition(4,8);
+    pos = playGame.getTilePosition(4,8);
     this.add.image(pos.x + (gameOptions.tileSize / 2), pos.y, "line").setScale(1, 9.6);
 
     //horizontal lines
-    pos = this.getTilePosition(0,4);
+    pos = playGame.getTilePosition(0,4);
     this.add.image(pos.x, pos.y - gameOptions.tileSize - gameOptions.tileSpacing + (gameOptions.tileSize / 2) + (gameOptions.tileSpacing / 2), "line").setScale(1, 9.6).setAngle(90);
-    pos = this.getTilePosition(2,4);
+    pos = playGame.getTilePosition(2,4);
     this.add.image(pos.x, pos.y + (gameOptions.tileSize / 2) + (gameOptions.tileSpacing / 2), "line").setScale(1, 9.6).setAngle(90);
-    pos = this.getTilePosition(5,4);
+    pos = playGame.getTilePosition(5,4);
     this.add.image(pos.x, pos.y + (gameOptions.tileSize / 2) + (gameOptions.tileSpacing / 2), "line").setScale(1, 9.6).setAngle(90);
-    pos = this.getTilePosition(8,4);
+    pos = playGame.getTilePosition(8,4);
     this.add.image(pos.x, pos.y + (gameOptions.tileSize / 2) + (gameOptions.tileSpacing / 2), "line").setScale(1, 9.6).setAngle(90);
   }
   addTilesToScreen(){
@@ -89,13 +75,14 @@ class playGame extends Phaser.Scene{
     for(var i = 0; i < gameOptions.boardSize.rows; i++){
       this.tileArray[i] = [];
       for(var j = 0; j < gameOptions.boardSize.cols; j++){
-        var tilePosition = this.getTilePosition(i,j);
+        var tilePosition = playGame.getTilePosition(i,j);
         this.add.image(tilePosition.x, tilePosition.y, "emptytile");
-        if(visibleMap[i][j] == true) {
+        if(visibleMap[i][j] === true) {
             this.add.image(tilePosition.x, tilePosition.y, sudokuMap[i][j].toString());
         }
       }
     }
+    this.showMoveableNumbers();
   }
   createSolution(){
       var map = new Array(9);
@@ -122,6 +109,99 @@ class playGame extends Phaser.Scene{
       map[7] = [true, true, false, false, true, false, false, true, true];
       map[8] = [false, true, false, false, false, true, false, true, false];
       return map;
+  }
+  showMoveableNumbers(){
+      var pos = playGame.getTilePosition(8,8);
+      var freeSpace = game.config.height - (pos.y + (gameOptions.tileSize / 2) + gameOptions.tileSpacing);
+      var posY = pos.y + (freeSpace / 2);
+      for(var i = 0; i < gameOptions.boardSize.cols; i++){
+          pos = playGame.getTilePosition(0, i);
+          this.add.image(pos.x, posY, "emptytile");
+      }
+
+      this.items = this.add.group([
+          {
+            key: "1",
+            setXY: {
+                x: playGame.getTilePosition(0, 0).x,
+                y: posY
+            }
+          },
+          {
+            key: "2",
+            setXY: {
+                x: playGame.getTilePosition(0, 1).x,
+                y: posY
+            }
+          },
+          {
+              key: "3",
+              setXY: {
+                  x: playGame.getTilePosition(0, 2).x,
+                  y: posY
+              }
+          },
+          {
+              key: "4",
+              setXY: {
+                  x: playGame.getTilePosition(0, 3).x,
+                  y: posY
+              }
+          },
+          {
+              key: "5",
+              setXY: {
+                  x: playGame.getTilePosition(0, 4).x,
+                  y: posY
+              }
+          },
+          {
+              key: "6",
+              setXY: {
+                  x: playGame.getTilePosition(0, 5).x,
+                  y: posY
+              }
+          },
+          {
+              key: "7",
+              setXY: {
+                  x: playGame.getTilePosition(0, 6).x,
+                  y: posY
+              }
+          },
+          {
+              key: "8",
+              setXY: {
+                  x: playGame.getTilePosition(0, 7).x,
+                  y: posY
+              }
+          },
+          {
+              key: "9",
+              setXY: {
+                  x: playGame.getTilePosition(0, 8).x,
+                  y: posY
+              }
+          }
+      ]);
+
+      this.items.setDepth(1);
+      Phaser.Actions.Call(this.items.getChildren(), function(item){
+          item.setInteractive();
+          this.input.setDraggable(item);
+          item.on('dragstart', function (pointer) {
+              item.setTint(0xff0000);
+          });
+          item.on('drag', function (pointer, dragX, dragY) {
+              item.x = dragX;
+              item.y = dragY;
+          });
+          item.on('dragend', function (pointer) {
+              item.clearTint();
+              console.log("You dragged " + item.texture.key);
+          });
+
+      }, this);
   }
 }
 window.onload = function() {
