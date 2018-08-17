@@ -69,6 +69,32 @@ class playGame extends Phaser.Scene{
       }
     }
   }
+  createSolution(){
+      var map = new Array(9);
+      map[0] = [3, 5, 9, 6, 1, 8, 4, 2, 7];
+      map[1] = [7, 4, 2, 5, 3, 9, 8, 6, 1];
+      map[2] = [1, 6, 8, 4, 7, 2, 9, 5, 3];
+      map[3] = [4, 2, 3, 8, 9, 5, 7, 1, 6];
+      map[4] = [5, 8, 7, 1, 6, 4, 3, 9, 2];
+      map[5] = [6, 9, 1, 7, 2, 3, 5, 8, 4];
+      map[6] = [2, 7, 5, 9, 4, 6, 1, 3, 8];
+      map[7] = [8, 3, 4, 2, 5, 1, 6, 7, 9];
+      map[8] = [9, 1, 6, 3, 8, 7, 2, 4, 5];
+      return map;
+  }
+  initVisibleElements(){
+      var map = new Array(9);
+      map[0] = [false, false, true, true, false, true, false, true, true];
+      map[1] = [true, false, true, false, true, true, false, true, false];
+      map[2] = [false, false, true, false, true, true, false, true, false];
+      map[3] = [false, true, true, false, false, true, true, true, false];
+      map[4] = [true, false, false, true, true, false, true, false, true];
+      map[5] = [true, false, true, false, false, true, false, false, true];
+      map[6] = [false, false, true, false, true, true, true, true, true];
+      map[7] = [true, true, false, true, true, false, false, true, true];
+      map[8] = [false, true, true, true, false, true, true, true, false];
+      return map;
+  }
 }
 
 window.onload = function() {
