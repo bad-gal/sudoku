@@ -33,56 +33,56 @@ class playGame extends Phaser.Scene{
     super("PlayGame");
   }
   create(){
-    this.addTilesToScreen();
-    this.addLinesToScreen();
+      this.addTilesToScreen();
+      this.addLinesToScreen();
   }
   /*
     Get the tile position dependant on the row and column specified
   */
   static getTilePosition(row, col){
-    var posX = gameOptions.tileSpacing * (col + 1) + gameOptions.tileSize * (col + 0.5);
-    var posY = gameOptions.tileSpacing * (row + 1) + gameOptions.tileSize * (row + 0.5);
-    var boardHeight = gameOptions.boardSize.rows * gameOptions.tileSize;
-    boardHeight += (gameOptions.boardSize.rows + 1) * gameOptions.tileSpacing;
-    posY += (game.config.height - boardHeight) / 2;
-    return new Phaser.Geom.Point(posX, posY);
+      var posX = gameOptions.tileSpacing * (col + 1) + gameOptions.tileSize * (col + 0.5);
+      var posY = gameOptions.tileSpacing * (row + 1) + gameOptions.tileSize * (row + 0.5);
+      var boardHeight = gameOptions.boardSize.rows * gameOptions.tileSize;
+      boardHeight += (gameOptions.boardSize.rows + 1) * gameOptions.tileSpacing;
+      posY += (game.config.height - boardHeight) / 2;
+      return new Phaser.Geom.Point(posX, posY);
   }
   addLinesToScreen(){
-    //vertical lines
-    var pos = playGame.getTilePosition(4,0);
-    this.add.image(pos.x - gameOptions.tileSize + (gameOptions.tileSize / 2) , pos.y, "line").setScale(1, 9.6);
-    pos = playGame.getTilePosition(4,2);
-    this.add.image(pos.x + (gameOptions.tileSize / 2) + (gameOptions.tileSpacing / 2), pos.y, "line").setScale(1, 9.6);
-    pos = playGame.getTilePosition(4,5);
-    this.add.image(pos.x + (gameOptions.tileSize / 2) + (gameOptions.tileSpacing / 2), pos.y, "line").setScale(1, 9.6);
-    pos = playGame.getTilePosition(4,8);
-    this.add.image(pos.x + (gameOptions.tileSize / 2), pos.y, "line").setScale(1, 9.6);
+      //vertical lines
+      var pos = playGame.getTilePosition(4,0);
+      this.add.image(pos.x - gameOptions.tileSize + (gameOptions.tileSize / 2) , pos.y, "line").setScale(1, 9.6);
+      pos = playGame.getTilePosition(4,2);
+      this.add.image(pos.x + (gameOptions.tileSize / 2) + (gameOptions.tileSpacing / 2), pos.y, "line").setScale(1, 9.6);
+      pos = playGame.getTilePosition(4,5);
+      this.add.image(pos.x + (gameOptions.tileSize / 2) + (gameOptions.tileSpacing / 2), pos.y, "line").setScale(1, 9.6);
+      pos = playGame.getTilePosition(4,8);
+      this.add.image(pos.x + (gameOptions.tileSize / 2), pos.y, "line").setScale(1, 9.6);
 
-    //horizontal lines
-    pos = playGame.getTilePosition(0,4);
-    this.add.image(pos.x, pos.y - gameOptions.tileSize - gameOptions.tileSpacing + (gameOptions.tileSize / 2) + (gameOptions.tileSpacing / 2), "line").setScale(1, 9.6).setAngle(90);
-    pos = playGame.getTilePosition(2,4);
-    this.add.image(pos.x, pos.y + (gameOptions.tileSize / 2) + (gameOptions.tileSpacing / 2), "line").setScale(1, 9.6).setAngle(90);
-    pos = playGame.getTilePosition(5,4);
-    this.add.image(pos.x, pos.y + (gameOptions.tileSize / 2) + (gameOptions.tileSpacing / 2), "line").setScale(1, 9.6).setAngle(90);
-    pos = playGame.getTilePosition(8,4);
-    this.add.image(pos.x, pos.y + (gameOptions.tileSize / 2) + (gameOptions.tileSpacing / 2), "line").setScale(1, 9.6).setAngle(90);
+      //horizontal lines
+      pos = playGame.getTilePosition(0,4);
+      this.add.image(pos.x, pos.y - gameOptions.tileSize - gameOptions.tileSpacing + (gameOptions.tileSize / 2) + (gameOptions.tileSpacing / 2), "line").setScale(1, 9.6).setAngle(90);
+      pos = playGame.getTilePosition(2,4);
+      this.add.image(pos.x, pos.y + (gameOptions.tileSize / 2) + (gameOptions.tileSpacing / 2), "line").setScale(1, 9.6).setAngle(90);
+      pos = playGame.getTilePosition(5,4);
+      this.add.image(pos.x, pos.y + (gameOptions.tileSize / 2) + (gameOptions.tileSpacing / 2), "line").setScale(1, 9.6).setAngle(90);
+      pos = playGame.getTilePosition(8,4);
+      this.add.image(pos.x, pos.y + (gameOptions.tileSize / 2) + (gameOptions.tileSpacing / 2), "line").setScale(1, 9.6).setAngle(90);
   }
   addTilesToScreen(){
-    var sudokuMap = this.createSolution();
-    var visibleMap = this.initVisibleElements();
-    this.tileArray = [];
-    for(var i = 0; i < gameOptions.boardSize.rows; i++){
-      this.tileArray[i] = [];
-      for(var j = 0; j < gameOptions.boardSize.cols; j++){
-        var tilePosition = playGame.getTilePosition(i,j);
-        this.add.image(tilePosition.x, tilePosition.y, "emptytile");
-        if(visibleMap[i][j] === true) {
-            this.add.image(tilePosition.x, tilePosition.y, sudokuMap[i][j].toString());
-        }
+      var sudokuMap = this.createSolution();
+      var visibleMap = this.initVisibleElements();
+      this.tileArray = [];
+      for(var i = 0; i < gameOptions.boardSize.rows; i++){
+          this.tileArray[i] = [];
+          for(var j = 0; j < gameOptions.boardSize.cols; j++){
+              var tilePosition = playGame.getTilePosition(i,j);
+              this.add.image(tilePosition.x, tilePosition.y, "emptytile");
+              if(visibleMap[i][j] === true) {
+                  this.add.image(tilePosition.x, tilePosition.y, sudokuMap[i][j].toString());
+              }
+          }
       }
-    }
-    this.showMoveableNumbers();
+      this.showMoveableNumbers();
   }
   createSolution(){
       var map = new Array(9);
@@ -111,76 +111,78 @@ class playGame extends Phaser.Scene{
       return map;
   }
   showMoveableNumbers(){
-      var pos = playGame.getTilePosition(8,8);
+      var numberList = [];
+      var pos = playGame.getTilePosition(gameOptions.boardSize.cols, gameOptions.boardSize.rows);
       var freeSpace = game.config.height - (pos.y + (gameOptions.tileSize / 2) + gameOptions.tileSpacing);
       var posY = pos.y + (freeSpace / 2);
       for(var i = 0; i < gameOptions.boardSize.cols; i++){
           pos = playGame.getTilePosition(0, i);
           this.add.image(pos.x, posY, "emptytile");
+          numberList[i] = [pos.x, posY];
       }
 
       this.items = this.add.group([
           {
             key: "1",
             setXY: {
-                x: playGame.getTilePosition(0, 0).x,
-                y: posY
+                x: numberList[0][0],
+                y: numberList[0][1]
             }
           },
           {
             key: "2",
             setXY: {
-                x: playGame.getTilePosition(0, 1).x,
-                y: posY
+                x: numberList[1][0],
+                y: numberList[1][1]
             }
           },
           {
               key: "3",
               setXY: {
-                  x: playGame.getTilePosition(0, 2).x,
-                  y: posY
+                  x: numberList[2][0],
+                  y: numberList[2][1]
               }
           },
           {
               key: "4",
               setXY: {
-                  x: playGame.getTilePosition(0, 3).x,
-                  y: posY
+                  x: numberList[3][0],
+                  y: numberList[3][1]
               }
           },
           {
               key: "5",
               setXY: {
-                  x: playGame.getTilePosition(0, 4).x,
-                  y: posY
+                  x: numberList[4][0],
+                  y: numberList[4][1]
               }
           },
           {
               key: "6",
               setXY: {
-                  x: playGame.getTilePosition(0, 5).x,
-                  y: posY
+                  x: numberList[5][0],
+                  y: numberList[5][1]
               }
           },
           {
               key: "7",
               setXY: {
-                  x: playGame.getTilePosition(0, 6).x,
-                  y: posY
+                  x: numberList[6][0],
+                  y: numberList[6][1]
               }
           },
           {
               key: "8",
               setXY: {
-                  x: playGame.getTilePosition(0, 7).x,
-                  y: posY
+                  x: numberList[7][0],
+                  y: numberList[7][1]
               }
           },
           {
               key: "9",
               setXY: {
-                  x: playGame.getTilePosition(0, 8).x,
-                  y: posY
+                  x: numberList[8][0],
+                  y: numberList[8][1]
               }
           }
       ]);
@@ -198,7 +200,8 @@ class playGame extends Phaser.Scene{
           });
           item.on('dragend', function (pointer) {
               item.clearTint();
-              console.log("You dragged " + item.texture.key);
+              item.x = numberList[parseInt(item.texture.key, 10) - 1][0];
+              item.y = numberList[parseInt(item.texture.key, 10) - 1][1];
           });
 
       }, this);
@@ -218,7 +221,7 @@ window.onload = function() {
   window.focus();
   resizeGame();
   window.addEventListener("resize", resizeGame);
-}
+};
 /*
   Resize screen on game load and on user action
 */
