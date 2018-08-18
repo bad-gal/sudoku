@@ -6,6 +6,9 @@ const gameOptions = {
     tweenSpeed: 50,
     aspectRatio: 16 / 9
 };
+let map = new Array(gameOptions.boardSize.rows);
+let visibleMap = new Array(gameOptions.boardSize.rows);
+var tileArray = [];
 
 class bootGame extends Phaser.Scene{
   constructor(){
@@ -33,6 +36,7 @@ class playGame extends Phaser.Scene{
     super("PlayGame");
   }
   create(){
+
       this.addTilesToScreen();
       this.addLinesToScreen();
   }
@@ -69,23 +73,25 @@ class playGame extends Phaser.Scene{
       this.add.image(pos.x, pos.y + (gameOptions.tileSize / 2) + (gameOptions.tileSpacing / 2), "line").setScale(1, 9.6).setAngle(90);
   }
   addTilesToScreen(){
-      var sudokuMap = this.createSolution();
-      var visibleMap = this.initVisibleElements();
-      this.tileArray = [];
+      playGame.createSolution();
+      playGame.initVisibleElements();
+
       for(var i = 0; i < gameOptions.boardSize.rows; i++){
-          this.tileArray[i] = [];
+          tileArray[i] = [];
           for(var j = 0; j < gameOptions.boardSize.cols; j++){
               var tilePosition = playGame.getTilePosition(i,j);
               this.add.image(tilePosition.x, tilePosition.y, "emptytile");
-              if(visibleMap[i][j] === true) {
-                  this.add.image(tilePosition.x, tilePosition.y, sudokuMap[i][j].toString());
+              var tile = this.add.image(tilePosition.x, tilePosition.y, map[i][j].toString());
+              tile.visible = visibleMap[i][j];
+              tileArray[i][j] = {
+                  tileValue: map[i][j],
+                  tileSprite: tile
               }
           }
       }
       this.showMoveableNumbers();
   }
-  createSolution(){
-      var map = new Array(9);
+  static createSolution(){
       map[0] = [3, 5, 9, 6, 1, 8, 4, 2, 7];
       map[1] = [7, 4, 2, 5, 3, 9, 8, 6, 1];
       map[2] = [1, 6, 8, 4, 7, 2, 9, 5, 3];
@@ -97,24 +103,51 @@ class playGame extends Phaser.Scene{
       map[8] = [9, 1, 6, 3, 8, 7, 2, 4, 5];
       return map;
   }
-  initVisibleElements(){
-      var map = new Array(9);
-      map[0] = [false, false, true, false, false, true, false, true, true];
-      map[1] = [true, false, true, false, true, true, false, true, false];
-      map[2] = [false, false, true, false, true, true, false, true, false];
-      map[3] = [false, true, true, false, false, true, true, true, false];
-      map[4] = [true, false, false, true, true, false, true, false, true];
-      map[5] = [true, false, true, false, false, true, false, false, true];
-      map[6] = [false, false, true, false, false, true, false, true, false];
-      map[7] = [true, true, false, false, true, false, false, true, true];
-      map[8] = [false, true, false, false, false, true, false, true, false];
-      return map;
+  static initVisibleElements(){
+      visibleMap[0] = [false, false, true, false, false, true, false, true, true];
+      visibleMap[1] = [true, false, true, false, true, true, false, true, false];
+      visibleMap[2] = [false, false, true, false, true, true, false, true, false];
+      visibleMap[3] = [false, true, true, false, false, true, true, true, false];
+      visibleMap[4] = [true, false, false, true, true, false, true, false, true];
+      visibleMap[5] = [true, false, true, false, false, true, false, false, true];
+      visibleMap[6] = [false, false, true, false, false, true, false, true, false];
+      visibleMap[7] = [true, true, false, false, true, false, false, true, true];
+      visibleMap[8] = [false, true, false, false, false, true, false, true, false];
+      return visibleMap;
+  }
+  static getPosition(x, y){
+      for(var i = 0; i < gameOptions.boardSize.rows; i++){
+          for(var j = 0; j < gameOptions.boardSize.cols; j++){
+              var pos = playGame.getTilePosition(i, j);
+              if(x >= pos.x - (gameOptions.tileSize / 2) &&
+                    x <= pos.x + (gameOptions.tileSize / 2) &&
+                    y >= pos.y - (gameOptions.tileSize / 2) &&
+                    y <= pos.y + (gameOptions.tileSize / 2)){
+                  return [i, j];
+              }
+          }
+      }
+      return [-1, -1];
+  }
+  static hasWon(){
+      var count = 0;
+      for(var i = 0; i < gameOptions.boardSize.rows; i++){
+          for(var j = 0; j < gameOptions.boardSize.cols; j++){
+            if(tileArray[i][j].tileSprite.visible === true){
+                count++;
+            } else {
+                return false;
+            }
+          }
+      }
+      return true;
   }
   showMoveableNumbers(){
       var numberList = [];
       var pos = playGame.getTilePosition(gameOptions.boardSize.cols, gameOptions.boardSize.rows);
       var freeSpace = game.config.height - (pos.y + (gameOptions.tileSize / 2) + gameOptions.tileSpacing);
       var posY = pos.y + (freeSpace / 2);
+
       for(var i = 0; i < gameOptions.boardSize.cols; i++){
           pos = playGame.getTilePosition(0, i);
           this.add.image(pos.x, posY, "emptytile");
@@ -200,8 +233,17 @@ class playGame extends Phaser.Scene{
           });
           item.on('dragend', function (pointer) {
               item.clearTint();
+              var withinBounds = playGame.getPosition(item.x, item.y);
+              if(withinBounds[0] !== -1 && withinBounds[1] !== -1){
+                  if(tileArray[withinBounds[0]][withinBounds[1]].tileValue === parseInt(item.texture.key, 10)){
+                      tileArray[withinBounds[0]][withinBounds[1]].tileSprite.visible = true;
+                  }
+              }
               item.x = numberList[parseInt(item.texture.key, 10) - 1][0];
               item.y = numberList[parseInt(item.texture.key, 10) - 1][1];
+              if(playGame.hasWon()){
+                  console.log("Player has won!")
+              }
           });
 
       }, this);
