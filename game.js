@@ -1,4 +1,10 @@
 let game;
+let tileArray = [];
+let timeText;
+let gameTimer;
+let myTime;
+let startTimer;
+
 const gameOptions = {
     tileSize: 288,
     tileSpacing: 20,
@@ -8,12 +14,15 @@ const gameOptions = {
 };
 let map = new Array(gameOptions.boardSize.rows);
 let visibleMap = new Array(gameOptions.boardSize.rows);
-var tileArray = [];
 
+/*
+    Before game is displayed load the graphics
+*/
 class bootGame extends Phaser.Scene{
   constructor(){
     super("BootGame");
   }
+
   preload(){
     this.load.image("emptytile", "assets/sprites/emptytile.png");
     this.load.image("1", "assets/sprites/1.png");
@@ -27,19 +36,30 @@ class bootGame extends Phaser.Scene{
     this.load.image("9", "assets/sprites/9.png");
     this.load.image("line", "assets/sprites/line.png");
   }
+
   create(){
     this.scene.start("PlayGame");
   }
 }
+
+/*
+    Manage gameplay here
+*/
 class playGame extends Phaser.Scene{
   constructor(){
     super("PlayGame");
   }
-  create(){
 
+  create(){
+      //initialise timer values
+      myTime = 0;
+      startTimer = 0;
+      timeText = this.add.text(32, 32, "_", { fontSize: '100px', fill: '#000' });
+      gameTimer = this.time.addEvent({ delay: 1000, callback: onEvent, callbackScope: this, loop: true });
       this.addTilesToScreen();
       this.addLinesToScreen();
   }
+
   /*
     Get the tile position dependant on the row and column specified
   */
@@ -51,6 +71,7 @@ class playGame extends Phaser.Scene{
       posY += (game.config.height - boardHeight) / 2;
       return new Phaser.Geom.Point(posX, posY);
   }
+
   addLinesToScreen(){
       //vertical lines
       var pos = playGame.getTilePosition(4,0);
@@ -72,6 +93,7 @@ class playGame extends Phaser.Scene{
       pos = playGame.getTilePosition(8,4);
       this.add.image(pos.x, pos.y + (gameOptions.tileSize / 2) + (gameOptions.tileSpacing / 2), "line").setScale(1, 9.6).setAngle(90);
   }
+
   addTilesToScreen(){
       playGame.createSolution();
       playGame.initVisibleElements();
@@ -91,6 +113,7 @@ class playGame extends Phaser.Scene{
       }
       this.showMoveableNumbers();
   }
+
   static createSolution(){
       map[0] = [3, 5, 9, 6, 1, 8, 4, 2, 7];
       map[1] = [7, 4, 2, 5, 3, 9, 8, 6, 1];
@@ -103,6 +126,7 @@ class playGame extends Phaser.Scene{
       map[8] = [9, 1, 6, 3, 8, 7, 2, 4, 5];
       return map;
   }
+
   static initVisibleElements(){
       visibleMap[0] = [false, false, true, false, false, true, false, true, true];
       visibleMap[1] = [true, false, true, false, true, true, false, true, false];
@@ -115,6 +139,7 @@ class playGame extends Phaser.Scene{
       visibleMap[8] = [false, true, false, false, false, true, false, true, false];
       return visibleMap;
   }
+
   static getPosition(x, y){
       for(var i = 0; i < gameOptions.boardSize.rows; i++){
           for(var j = 0; j < gameOptions.boardSize.cols; j++){
@@ -129,6 +154,7 @@ class playGame extends Phaser.Scene{
       }
       return [-1, -1];
   }
+
   static hasWon(){
       var count = 0;
       for(var i = 0; i < gameOptions.boardSize.rows; i++){
@@ -142,95 +168,105 @@ class playGame extends Phaser.Scene{
       }
       return true;
   }
+
   showMoveableNumbers(){
       var numberList = [];
+
+      //dynamically decide where the moveable tiles will be placed
       var pos = playGame.getTilePosition(gameOptions.boardSize.cols, gameOptions.boardSize.rows);
       var freeSpace = game.config.height - (pos.y + (gameOptions.tileSize / 2) + gameOptions.tileSpacing);
       var posY = pos.y + (freeSpace / 2);
 
+      //add emptytile images
       for(var i = 0; i < gameOptions.boardSize.cols; i++){
           pos = playGame.getTilePosition(0, i);
           this.add.image(pos.x, posY, "emptytile");
           numberList[i] = [pos.x, posY];
       }
 
+      //create a group consisting of tiles from 1 to 9 which are draggable. Place them in a row on top of
+      //the emptytiles
       this.items = this.add.group([
           {
             key: "1",
             setXY: {
-                x: numberList[0][0],
-                y: numberList[0][1]
+                x: numberList[0][0], y: numberList[0][1]
             }
           },
           {
             key: "2",
             setXY: {
-                x: numberList[1][0],
-                y: numberList[1][1]
+                x: numberList[1][0], y: numberList[1][1]
             }
           },
           {
               key: "3",
               setXY: {
-                  x: numberList[2][0],
-                  y: numberList[2][1]
+                  x: numberList[2][0], y: numberList[2][1]
               }
           },
           {
               key: "4",
               setXY: {
-                  x: numberList[3][0],
-                  y: numberList[3][1]
+                  x: numberList[3][0], y: numberList[3][1]
               }
           },
           {
               key: "5",
               setXY: {
-                  x: numberList[4][0],
-                  y: numberList[4][1]
+                  x: numberList[4][0], y: numberList[4][1]
               }
           },
           {
               key: "6",
               setXY: {
-                  x: numberList[5][0],
-                  y: numberList[5][1]
+                  x: numberList[5][0], y: numberList[5][1]
               }
           },
           {
               key: "7",
               setXY: {
-                  x: numberList[6][0],
-                  y: numberList[6][1]
+                  x: numberList[6][0], y: numberList[6][1]
               }
           },
           {
               key: "8",
               setXY: {
-                  x: numberList[7][0],
-                  y: numberList[7][1]
+                  x: numberList[7][0], y: numberList[7][1]
               }
           },
           {
               key: "9",
               setXY: {
-                  x: numberList[8][0],
-                  y: numberList[8][1]
+                  x: numberList[8][0], y: numberList[8][1]
               }
           }
       ]);
 
-      this.items.setDepth(1);
+      this.items.setDepth(1); //set the group to be drawn over the other images in the game
+
+      //make the group interactive and able to be dragged by the player.
       Phaser.Actions.Call(this.items.getChildren(), function(item){
           item.setInteractive();
           this.input.setDraggable(item);
+
           item.on('dragstart', function (pointer) {
               item.setTint(0xff0000);
+
+              //start incrementing timer once player has moved the first tile
+              if(startTimer === 0) {
+                  startTimer = 1;
+              }
           });
+
+          //set the dragged tile to be the same position as the mouse pointer
           item.on('drag', function (pointer, dragX, dragY) {
               item.x = dragX;
               item.y = dragY;
           });
+
+          //If the tile is placed in the correct position then the hidden tile is revealed
+          //This dragged tile goes back to original position.
           item.on('dragend', function (pointer) {
               item.clearTint();
               var withinBounds = playGame.getPosition(item.x, item.y);
@@ -245,34 +281,65 @@ class playGame extends Phaser.Scene{
                   console.log("Player has won!")
               }
           });
-
       }, this);
   }
+
+  update(){
+      //Format the time to show mm:ss
+      let minutes = Math.floor(myTime / 60);
+      let seconds;
+
+      if(myTime > 59) {
+          seconds = myTime % 60;
+      } else {
+          seconds = myTime;
+      }
+
+      if(seconds < 10){
+          timeText.setText("Timer " + minutes.toFixed(0) + ":" + "0" + seconds);
+      } else {
+          timeText.setText("Timer " + minutes.toFixed(0) + ":" + seconds);
+      }
+  }
 }
+
+function onEvent(){
+    if(startTimer === 1) {
+        myTime++;
+    }
+}
+
+/**********************************************
+ Initialise variables when window loads
+ **********************************************/
 window.onload = function() {
   var tileAndSpacing = gameOptions.tileSize + gameOptions.tileSpacing;
   var width = gameOptions.boardSize.cols * tileAndSpacing;
   width += gameOptions.tileSpacing;
+
   var gameConfig = {
     width: width,
     height: width * gameOptions.aspectRatio,
     backgroundColor: 0xecf0f1,
     scene: [bootGame, playGame]
   };
+
   game = new Phaser.Game(gameConfig);
   window.focus();
   resizeGame();
   window.addEventListener("resize", resizeGame);
 };
-/*
+
+/**********************************************
   Resize screen on game load and on user action
-*/
+***********************************************/
 function resizeGame() {
-  var canvas = document.querySelector("canvas");
-  var windowWidth = window.innerWidth;
-  var windowHeight = window.innerHeight;
-  var windowRatio = windowWidth / windowHeight;
-  var gameRatio = game.config.width / game.config.height;
+  let canvas = document.querySelector("canvas");
+  let windowWidth = window.innerWidth;
+  let windowHeight = window.innerHeight;
+  let windowRatio = windowWidth / windowHeight;
+  let gameRatio = game.config.width / game.config.height;
+
   if(windowRatio < gameRatio){
     canvas.style.width = windowWidth + "px";
     canvas.style.height = (windowWidth / gameRatio) + "px";
