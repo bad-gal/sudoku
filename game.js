@@ -4,6 +4,7 @@ let timeText;
 let gameTimer;
 let myTime;
 let startTimer;
+let level;
 
 const gameOptions = {
     tileSize: 288,
@@ -35,11 +36,57 @@ class bootGame extends Phaser.Scene{
     this.load.image("8", "assets/sprites/8.png");
     this.load.image("9", "assets/sprites/9.png");
     this.load.image("line", "assets/sprites/line.png");
+    this.load.image("easy", "assets/sprites/easy.png");
+    this.load.image("medium", "assets/sprites/medium.png");
+    this.load.image("hard", "assets/sprites/hard.png");
+    this.load.image("superhard", "assets/sprites/superhard.png");
   }
 
   create(){
-    this.scene.start("PlayGame");
+    this.scene.start("MenuGame");
   }
+}
+
+class menuGame extends Phaser.Scene{
+    constructor(){
+        super("MenuGame");
+    }
+
+    create(){
+        this.add.text(300, 300, "Choose level of difficulty", { fontSize: '100px', fill: '#000' });
+
+        //add level buttons and make them clickable
+        this.items = this.add.group([
+            { key: "easy", setXY: { x: 700, y: 600 } },
+            { key: "medium", setXY: { x: 700, y: 1200 } },
+            { key: "hard", setXY: { x: 700, y: 1800 } },
+            { key: "superhard", setXY: { x: 700, y: 2400 } }
+        ]);
+
+        Phaser.Actions.Call(this.items.getChildren(), function(item){
+            item.setInteractive();
+
+            item.on('pointerdown', function (pointer) {
+                item.setTint(0xff0000);
+            });
+
+            item.on('pointerout', function (pointer) {
+                item.clearTint();
+            });
+
+            item.on('pointerup', function (pointer) {
+                item.clearTint();
+                level = item.texture.key;
+                console.log(level);
+            });
+        }, this );
+    }
+
+    update(){
+        if(level != null || level !== undefined) {
+            this.scene.start("PlayGame");
+        }
+    }
 }
 
 /*
@@ -321,7 +368,7 @@ window.onload = function() {
     width: width,
     height: width * gameOptions.aspectRatio,
     backgroundColor: 0xecf0f1,
-    scene: [bootGame, playGame]
+    scene: [bootGame, menuGame, playGame]
   };
 
   game = new Phaser.Game(gameConfig);
