@@ -5,6 +5,10 @@ let gameTimer;
 let myTime;
 let startTimer;
 let level;
+let randomOrder = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20];
+let levelList = [];
+let sudokuMap;
+let goToMenu;
 
 const gameOptions = {
     tileSize: 288,
@@ -40,6 +44,8 @@ class bootGame extends Phaser.Scene{
     this.load.image("medium", "assets/sprites/medium.png");
     this.load.image("hard", "assets/sprites/hard.png");
     this.load.image("superhard", "assets/sprites/superhard.png");
+    this.load.image("retry", "assets/sprites/retry.png");
+    this.load.image("menu", "assets/sprites/menu.png");
   }
 
   create(){
@@ -78,12 +84,15 @@ class menuGame extends Phaser.Scene{
                 item.clearTint();
                 level = item.texture.key;
                 console.log(level);
+                shuffle(randomOrder);
+                levelList = appendText(item.texture.key, randomOrder);
+                console.log(levelList);
             });
         }, this );
     }
 
     update(){
-        if(level != null || level !== undefined) {
+        if(level !== undefined) {
             this.scene.start("PlayGame");
         }
     }
@@ -103,17 +112,46 @@ class playGame extends Phaser.Scene{
       startTimer = 0;
       timeText = this.add.text(32, 32, "_", { fontSize: '100px', fill: '#000' });
       gameTimer = this.time.addEvent({ delay: 1000, callback: onEvent, callbackScope: this, loop: true });
+      goToMenu = false;
       this.addTilesToScreen();
       this.addLinesToScreen();
+
+      let retry = this.add.sprite(400, 600, 'retry').setInteractive();
+      retry.on("pointerdown", function(){
+          retry.setTint(0xff0000);
+      });
+
+      retry.on('pointerout', function () {
+          retry.clearTint();
+      });
+
+      retry.on('pointerup', function () {
+          item.clearTint();
+          console.log("replay this level");
+      });
+
+      let menu = this.add.sprite(1000, 600, 'menu').setInteractive();
+      menu.on("pointerdown", function(){
+          menu.setTint(0xff0000);
+      });
+
+      menu.on('pointerout', function () {
+          menu.clearTint();
+      });
+
+      menu.on('pointerup', function () {
+          menu.clearTint();
+          goToMenu = true;
+      });
   }
 
   /*
     Get the tile position dependant on the row and column specified
   */
   static getTilePosition(row, col){
-      var posX = gameOptions.tileSpacing * (col + 1) + gameOptions.tileSize * (col + 0.5);
-      var posY = gameOptions.tileSpacing * (row + 1) + gameOptions.tileSize * (row + 0.5);
-      var boardHeight = gameOptions.boardSize.rows * gameOptions.tileSize;
+      let posX = gameOptions.tileSpacing * (col + 1) + gameOptions.tileSize * (col + 0.5);
+      let posY = gameOptions.tileSpacing * (row + 1) + gameOptions.tileSize * (row + 0.5);
+      let boardHeight = gameOptions.boardSize.rows * gameOptions.tileSize;
       boardHeight += (gameOptions.boardSize.rows + 1) * gameOptions.tileSpacing;
       posY += (game.config.height - boardHeight) / 2;
       return new Phaser.Geom.Point(posX, posY);
@@ -121,7 +159,7 @@ class playGame extends Phaser.Scene{
 
   addLinesToScreen(){
       //vertical lines
-      var pos = playGame.getTilePosition(4,0);
+      let pos = playGame.getTilePosition(4,0);
       this.add.image(pos.x - gameOptions.tileSize + (gameOptions.tileSize / 2) , pos.y, "line").setScale(1, 9.6);
       pos = playGame.getTilePosition(4,2);
       this.add.image(pos.x + (gameOptions.tileSize / 2) + (gameOptions.tileSpacing / 2), pos.y, "line").setScale(1, 9.6);
@@ -142,15 +180,15 @@ class playGame extends Phaser.Scene{
   }
 
   addTilesToScreen(){
-      playGame.createSolution();
-      playGame.initVisibleElements();
+      map = playGame.createMap(sudokuMap[levelList[0]].map);
+      visibleMap = playGame.createVisibleTiles(sudokuMap[levelList[0]].visible);
 
-      for(var i = 0; i < gameOptions.boardSize.rows; i++){
+      for(let i = 0; i < gameOptions.boardSize.rows; i++){
           tileArray[i] = [];
-          for(var j = 0; j < gameOptions.boardSize.cols; j++){
-              var tilePosition = playGame.getTilePosition(i,j);
+          for(let j = 0; j < gameOptions.boardSize.cols; j++){
+              let tilePosition = playGame.getTilePosition(i,j);
               this.add.image(tilePosition.x, tilePosition.y, "emptytile");
-              var tile = this.add.image(tilePosition.x, tilePosition.y, map[i][j].toString());
+              let tile = this.add.image(tilePosition.x, tilePosition.y, map[i][j].toString());
               tile.visible = visibleMap[i][j];
               tileArray[i][j] = {
                   tileValue: map[i][j],
@@ -158,39 +196,43 @@ class playGame extends Phaser.Scene{
               }
           }
       }
-      this.showMoveableNumbers();
+      this.showMovableNumbers();
   }
 
-  static createSolution(){
-      map[0] = [3, 5, 9, 6, 1, 8, 4, 2, 7];
-      map[1] = [7, 4, 2, 5, 3, 9, 8, 6, 1];
-      map[2] = [1, 6, 8, 4, 7, 2, 9, 5, 3];
-      map[3] = [4, 2, 3, 8, 9, 5, 7, 1, 6];
-      map[4] = [5, 8, 7, 1, 6, 4, 3, 9, 2];
-      map[5] = [6, 9, 1, 7, 2, 3, 5, 8, 4];
-      map[6] = [2, 7, 5, 9, 4, 6, 1, 3, 8];
-      map[7] = [8, 3, 4, 2, 5, 1, 6, 7, 9];
-      map[8] = [9, 1, 6, 3, 8, 7, 2, 4, 5];
-      return map;
+  static createMap(values){
+      var arr = [];
+      var index = -1;
+      for(var i = 0; i < values.length; i++){
+          if(i % gameOptions.boardSize.cols === 0){
+              index++;
+              arr[index] = [];
+          }
+          arr[index].push(values[i]);
+      }
+      return arr;
   }
 
-  static initVisibleElements(){
-      visibleMap[0] = [false, false, true, false, false, true, false, true, true];
-      visibleMap[1] = [true, false, true, false, true, true, false, true, false];
-      visibleMap[2] = [false, false, true, false, true, true, false, true, false];
-      visibleMap[3] = [false, true, true, false, false, true, true, true, false];
-      visibleMap[4] = [true, false, false, true, true, false, true, false, true];
-      visibleMap[5] = [true, false, true, false, false, true, false, false, true];
-      visibleMap[6] = [false, false, true, false, false, true, false, true, false];
-      visibleMap[7] = [true, true, false, false, true, false, false, true, true];
-      visibleMap[8] = [false, true, false, false, false, true, false, true, false];
-      return visibleMap;
+  static createVisibleTiles(values){
+      let arr = [];
+      let index = -1;
+      for(let i = 0; i < values.length; i++){
+          if(i % gameOptions.boardSize.cols === 0){
+              index++;
+              arr[index] = [];
+          }
+          if(values[i] === 1){
+              arr[index].push(true);
+          } else {
+              arr[index].push(false);
+          }
+      }
+      return arr;
   }
 
   static getPosition(x, y){
-      for(var i = 0; i < gameOptions.boardSize.rows; i++){
-          for(var j = 0; j < gameOptions.boardSize.cols; j++){
-              var pos = playGame.getTilePosition(i, j);
+      for(let i = 0; i < gameOptions.boardSize.rows; i++){
+          for(let j = 0; j < gameOptions.boardSize.cols; j++){
+              let pos = playGame.getTilePosition(i, j);
               if(x >= pos.x - (gameOptions.tileSize / 2) &&
                     x <= pos.x + (gameOptions.tileSize / 2) &&
                     y >= pos.y - (gameOptions.tileSize / 2) &&
@@ -203,9 +245,9 @@ class playGame extends Phaser.Scene{
   }
 
   static hasWon(){
-      var count = 0;
-      for(var i = 0; i < gameOptions.boardSize.rows; i++){
-          for(var j = 0; j < gameOptions.boardSize.cols; j++){
+      let count = 0;
+      for(let i = 0; i < gameOptions.boardSize.rows; i++){
+          for(let j = 0; j < gameOptions.boardSize.cols; j++){
             if(tileArray[i][j].tileSprite.visible === true){
                 count++;
             } else {
@@ -216,23 +258,23 @@ class playGame extends Phaser.Scene{
       return true;
   }
 
-  showMoveableNumbers(){
-      var numberList = [];
+  showMovableNumbers(){
+      let numberList = [];
 
-      //dynamically decide where the moveable tiles will be placed
-      var pos = playGame.getTilePosition(gameOptions.boardSize.cols, gameOptions.boardSize.rows);
-      var freeSpace = game.config.height - (pos.y + (gameOptions.tileSize / 2) + gameOptions.tileSpacing);
-      var posY = pos.y + (freeSpace / 2);
+      //dynamically decide where the movable tiles will be placed
+      let pos = playGame.getTilePosition(gameOptions.boardSize.cols, gameOptions.boardSize.rows);
+      let freeSpace = game.config.height - (pos.y + (gameOptions.tileSize / 2) + gameOptions.tileSpacing);
+      let posY = pos.y + (freeSpace / 2);
 
-      //add emptytile images
-      for(var i = 0; i < gameOptions.boardSize.cols; i++){
+      //add empty tile images
+      for(let i = 0; i < gameOptions.boardSize.cols; i++){
           pos = playGame.getTilePosition(0, i);
           this.add.image(pos.x, posY, "emptytile");
           numberList[i] = [pos.x, posY];
       }
 
       //create a group consisting of tiles from 1 to 9 which are draggable. Place them in a row on top of
-      //the emptytiles
+      //the empty tiles
       this.items = this.add.group([
           {
             key: "1",
@@ -347,6 +389,11 @@ class playGame extends Phaser.Scene{
       } else {
           timeText.setText("Timer " + minutes.toFixed(0) + ":" + seconds);
       }
+
+      if(goToMenu === true){
+          this.scene.start("MenuGame");
+          level = undefined;
+      }
   }
 }
 
@@ -360,11 +407,11 @@ function onEvent(){
  Initialise variables when window loads
  **********************************************/
 window.onload = function() {
-  var tileAndSpacing = gameOptions.tileSize + gameOptions.tileSpacing;
-  var width = gameOptions.boardSize.cols * tileAndSpacing;
+  let tileAndSpacing = gameOptions.tileSize + gameOptions.tileSpacing;
+  let width = gameOptions.boardSize.cols * tileAndSpacing;
   width += gameOptions.tileSpacing;
 
-  var gameConfig = {
+  let gameConfig = {
     width: width,
     height: width * gameOptions.aspectRatio,
     backgroundColor: 0xecf0f1,
@@ -372,6 +419,11 @@ window.onload = function() {
   };
 
   game = new Phaser.Game(gameConfig);
+
+  loadJSON(function (response){
+      sudokuMap = JSON.parse(response);
+  });
+
   window.focus();
   resizeGame();
   window.addEventListener("resize", resizeGame);
@@ -395,4 +447,40 @@ function resizeGame() {
     canvas.style.width = (windowHeight * gameRatio) + "px";
     canvas.style.height = windowHeight + "px";
   }
+}
+
+/**********************************************
+ Load map.json
+ taken from: https://codepen.io/KryptoniteDove/post/load-json-file-locally-using-pure-javascript
+ ***********************************************/
+function loadJSON(callback) {
+    let object = new XMLHttpRequest();
+    object.overrideMimeType("application/json");
+    object.open('GET', 'map.json', true);
+    object.onreadystatechange = function () {
+        if (object.readyState == 4 && object.status == "200") {
+            // Required use of an anonymous callback as .open will NOT return a value but simply returns undefined in asynchronous mode
+            callback(object.responseText);
+        }
+    };
+    object.send(null);
+}
+
+function shuffle(array){
+    let i = 0, j = 0, temp = null;
+
+    for (i = array.length - 1; i > 0; i -= 1) {
+        j = Math.floor(Math.random() * (i + 1));
+        temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+}
+
+function appendText(text, array){
+    let arr = [];
+    for(let i = 0; i < array.length; i++){
+        arr[i] = text + array[i];
+    }
+    return arr;
 }
