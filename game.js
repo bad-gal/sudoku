@@ -9,6 +9,11 @@ let randomOrder = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20];
 let levelList = [];
 let sudokuMap;
 let goToMenu;
+let reset;
+let startGame = false;
+let stopTimer = false;
+let stopMinutes;
+let stopSeconds;
 
 const gameOptions = {
     tileSize: 288,
@@ -46,11 +51,52 @@ class bootGame extends Phaser.Scene{
     this.load.image("superhard", "assets/sprites/superhard.png");
     this.load.image("retry", "assets/sprites/retry.png");
     this.load.image("menu", "assets/sprites/menu.png");
+    this.load.image("background", "assets/sprites/bamboo3.png");
+    this.load.image("title", "assets/sprites/sudoku_title.png");
+    this.load.image("play", "assets/sprites/play.png");
+    this.load.image("holder", "assets/sprites/holder.png");
+    this.load.image("time", "assets/sprites/time.png");
+    this.load.image("counter", "assets/sprites/counter.png");
   }
 
   create(){
-    this.scene.start("MenuGame");
+    this.scene.start("TitleGame");
   }
+}
+
+class titleGame extends Phaser.Scene{
+    constructor(){
+        super("TitleGame");
+    }
+
+    create(){
+        let background = this.add.image(game.config.width / 2, game.config.height / 2, "background");
+        background.setDisplaySize(game.config.width, game.config.height);
+
+        this.add.image(game.config.width / 2, game.config.height / 3, "title");
+
+        let play = this.add.sprite(game.config.width / 2, game.config.height / 2, "play").setInteractive();
+        play.on("pointerdown", function(){
+            play.setTint(0xff0000);
+        });
+
+        play.on('pointerout', function () {
+            play.clearTint();
+        });
+
+        play.on('pointerup', function () {
+            play.clearTint();
+            startGame = true;
+        });
+
+    }
+
+    update(){
+        if(startGame === true){
+            this.scene.start("MenuGame");
+            startGame = false;
+        }
+    }
 }
 
 class menuGame extends Phaser.Scene{
@@ -59,14 +105,19 @@ class menuGame extends Phaser.Scene{
     }
 
     create(){
+        let background = this.add.image(game.config.width / 2, game.config.height / 2, "background");
+        background.setDisplaySize(game.config.width, game.config.height);
+        let holder = this.add.image(game.config.width / 2, game.config.height / 2, "holder");
+
+        //need to use relative layout for this text
         this.add.text(300, 300, "Choose level of difficulty", { fontSize: '100px', fill: '#000' });
 
         //add level buttons and make them clickable
         this.items = this.add.group([
-            { key: "easy", setXY: { x: 700, y: 600 } },
-            { key: "medium", setXY: { x: 700, y: 1200 } },
-            { key: "hard", setXY: { x: 700, y: 1800 } },
-            { key: "superhard", setXY: { x: 700, y: 2400 } }
+            { key: "easy", setXY: { x: holder.x - (holder.x / 3), y: holder.y - (holder.y / 8)} },
+            { key: "medium", setXY: { x: holder.x + (holder.x / 3), y: holder.y - (holder.y / 8) } },
+            { key: "hard", setXY: { x: holder.x - (holder.x / 3), y: holder.y + (holder.y / 8) } },
+            { key: "superhard", setXY: { x: holder.x + (holder.x / 3), y: holder.y + (holder.y / 8) } }
         ]);
 
         Phaser.Actions.Call(this.items.getChildren(), function(item){
@@ -83,10 +134,8 @@ class menuGame extends Phaser.Scene{
             item.on('pointerup', function (pointer) {
                 item.clearTint();
                 level = item.texture.key;
-                console.log(level);
                 shuffle(randomOrder);
                 levelList = appendText(item.texture.key, randomOrder);
-                console.log(levelList);
             });
         }, this );
     }
@@ -107,16 +156,21 @@ class playGame extends Phaser.Scene{
   }
 
   create(){
+      let background = this.add.image(game.config.width / 2, game.config.height / 2, "background");
+      background.setDisplaySize(game.config.width, game.config.height);
+      this.add.image(game.config.width / 5, game.config.height / 22, "time");
+      this.add.image(game.config.width / 2 + (game.config.width / 2.8), game.config.height - (game.config.height / 26), "counter");
+
       //initialise timer values
       myTime = 0;
       startTimer = 0;
-      timeText = this.add.text(32, 32, "_", { fontSize: '100px', fill: '#000' });
+      timeText = this.add.text(game.config.width / 9, game.config.height / 28, "_", { fontSize: '100px', fill: '#fff' });
       gameTimer = this.time.addEvent({ delay: 1000, callback: onEvent, callbackScope: this, loop: true });
       goToMenu = false;
       this.addTilesToScreen();
       this.addLinesToScreen();
 
-      let retry = this.add.sprite(400, 600, 'retry').setInteractive();
+      let retry = this.add.sprite(game.config.width / 2 + (game.config.width / 2.5), 600, 'retry').setInteractive();
       retry.on("pointerdown", function(){
           retry.setTint(0xff0000);
       });
@@ -126,11 +180,14 @@ class playGame extends Phaser.Scene{
       });
 
       retry.on('pointerup', function () {
-          item.clearTint();
+          retry.clearTint();
           console.log("replay this level");
+          myTime = 0;
+          startTimer = 0;
+          reset = true;
       });
 
-      let menu = this.add.sprite(1000, 600, 'menu').setInteractive();
+      let menu = this.add.sprite(game.config.width / 2 + (game.config.width / 2.5), game.config.height / 2 - (game.config.height / 2.2), 'menu').setInteractive();
       menu.on("pointerdown", function(){
           menu.setTint(0xff0000);
       });
@@ -367,6 +424,15 @@ class playGame extends Phaser.Scene{
               item.x = numberList[parseInt(item.texture.key, 10) - 1][0];
               item.y = numberList[parseInt(item.texture.key, 10) - 1][1];
               if(playGame.hasWon()){
+                  stopTimer = true;
+                  let completedTime = myTime;
+                  stopMinutes = Math.floor(completedTime / 60);
+
+                  if (completedTime > 59) {
+                      stopSeconds = completedTime % 60;
+                  } else {
+                      stopSeconds = completedTime;
+                  }
                   console.log("Player has won!")
               }
           });
@@ -378,21 +444,34 @@ class playGame extends Phaser.Scene{
       let minutes = Math.floor(myTime / 60);
       let seconds;
 
-      if(myTime > 59) {
+      if (myTime > 59) {
           seconds = myTime % 60;
       } else {
           seconds = myTime;
       }
 
-      if(seconds < 10){
-          timeText.setText("Timer " + minutes.toFixed(0) + ":" + "0" + seconds);
+      if(stopTimer === false) {
+          if (seconds < 10) {
+              timeText.setText(minutes.toFixed(0) + ":" + "0" + seconds);
+          } else {
+              timeText.setText(minutes.toFixed(0) + ":" + seconds);
+          }
       } else {
-          timeText.setText("Timer " + minutes.toFixed(0) + ":" + seconds);
+          if (stopSeconds < 10) {
+              timeText.setText(stopMinutes.toFixed(0) + ":" + "0" + stopSeconds);
+          } else {
+              timeText.setText(stopMinutes.toFixed(0) + ":" + stopSeconds);
+          }
       }
 
       if(goToMenu === true){
           this.scene.start("MenuGame");
           level = undefined;
+      }
+
+      if(reset === true){
+          this.addTilesToScreen();
+          reset = false;
       }
   }
 }
@@ -415,7 +494,7 @@ window.onload = function() {
     width: width,
     height: width * gameOptions.aspectRatio,
     backgroundColor: 0xecf0f1,
-    scene: [bootGame, menuGame, playGame]
+    scene: [bootGame, titleGame, menuGame, playGame]
   };
 
   game = new Phaser.Game(gameConfig);
