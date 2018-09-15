@@ -62,6 +62,11 @@ class bootGame extends Phaser.Scene{
     this.load.image("counter", "assets/sprites/counter.png");
     this.load.image("dialog", "assets/sprites/dialog.png");
     this.load.image("playArrow", "assets/sprites/play_arrow.png");
+    this.load.image("menuText", "assets/sprites/menu_text.png");
+    this.load.image("congrats", "assets/sprites/congrats.png");
+    this.load.image("playAgain", "assets/sprites/playAgain_text.png");
+    this.load.image("completed", "assets/sprites/completed_text.png");
+    this.load.image("completedTime", "assets/sprites/completed_time_text.png");
   }
 
   create(){
@@ -113,9 +118,7 @@ class menuGame extends Phaser.Scene{
         let background = this.add.image(game.config.width / 2, game.config.height / 2, "background");
         background.setDisplaySize(game.config.width, game.config.height);
         let holder = this.add.image(game.config.width / 2, game.config.height / 2, "holder");
-
-        //need to use relative layout for this text
-        this.add.text(300, 300, "Choose level of difficulty", { fontSize: '100px', fill: '#000' });
+        this.add.image(game.config.width / 2, game.config.height / 3, "menuText");
 
         //add level buttons and make them clickable
         this.items = this.add.group([
@@ -141,7 +144,6 @@ class menuGame extends Phaser.Scene{
                 level = item.texture.key;
                 shuffle(randomOrder);
                 levelList = appendText(item.texture.key, randomOrder);
-                console.log(levelList);
             });
         }, this );
     }
@@ -167,7 +169,7 @@ class playGame extends Phaser.Scene{
       background.setDisplaySize(game.config.width, game.config.height);
       this.add.image(game.config.width / 5, game.config.height / 22, "time");
       this.add.image(game.config.width / 2 + (game.config.width / 2.8), game.config.height - (game.config.height / 26), "counter");
-      this.add.text(game.config.width / 2 + (game.config.width /3.8), game.config.height - (game.config.height / 20), (levelIndex + 1) + "/20", { fontSize: '100px', fill: "#fff" });
+      this.add.text(game.config.width / 2 + (game.config.width /3.8), game.config.height - (game.config.height / 20), (levelIndex + 1) + "/" + levelList.length, { fontSize: '100px', fill: "#fff" });
 
       //initialise timer values
       myTime = 0;
@@ -192,7 +194,6 @@ class playGame extends Phaser.Scene{
 
       retry.on('pointerup', function () {
           retry.clearTint();
-          console.log("replay this level");
           myTime = 0;
           startTimer = 0;
           reset = true;
@@ -445,7 +446,6 @@ class playGame extends Phaser.Scene{
                   } else {
                       stopSeconds = completedTime;
                   }
-                  console.log("Player has won!");
                   displayDialog = true;
               }
           });
@@ -508,15 +508,14 @@ class successGame extends Phaser.Scene{
         let dialog = this.add.image(game.config.width / 2, game.config.height / 2, "dialog");
         dialog.setDepth(1);
 
-        let dialogText1  = this.add.text(game.config.width / 2 - (game.config.width / 4), game.config.height / 2 - (game.config.height / 14), "Congratulations, you won!!!", { fontSize:'100px', fill: '#000' });
-        dialogText1.setDepth(2);
+        let dialogCongrats = this.add.image(game.config.width / 2, game.config.height / 2 - (game.config.height / 14), "congrats");
+        dialogCongrats.setDepth(2);
 
-        let dialogText2 = this.add.text(game.config.width / 2 - (game.config.width / 5), game.config.height / 2 - (game.config.height / 26), "Game completed in " + timeText.text, { fontSize: '100px', fill: '#000'});
-        dialogText2.setDepth(2);
+        let completedTimeText = this.add.image(game.config.width / 2, game.config.height / 2 - (game.config.height / 26), "completedTime");
+        completedTimeText.setDepth(2);
 
-        let textStatement = "Play another " + level + " game?";
-        let dialogText3  = this.add.text(game.config.width / 2 - (game.config.width / 5), game.config.height / 2, textStatement, { fontSize:'100px', fill: '#000' });
-        dialogText3.setDepth(2);
+        let dialogText = this.add.text(game.config.width / 2 + (game.config.width / 5), game.config.height / 2 - (game.config.height / 20),  timeText.text, { fontSize: '100px', fill: '#fff'});
+        dialogText.setDepth(2);
 
         let playArrow = this.add.sprite(game.config.width / 2, game.config.height / 2 + (game.config.height / 15), "playArrow");
         playArrow.setDepth(2);
@@ -532,13 +531,23 @@ class successGame extends Phaser.Scene{
 
         playArrow.on('pointerup', function () {
             playArrow.clearTint();
-            console.log("go to next level");
             nextGame = true;
             myTime = 0;
             startTimer = 0;
             stopTimer = false;
             displayDialog = false;
         });
+
+        //disable play button and "play another game" if the player has played 20 games already
+        let dialogPlayText;
+        if(levelIndex === levelList.length - 1){
+            playArrow.setVisible(false);
+            playArrow.input.enable = false;
+            dialogPlayText = this.add.image(game.config.width / 2, game.config.height / 2, "completed");
+        } else {
+            dialogPlayText = this.add.image(game.config.width / 2, game.config.height / 2, "playAgain");
+        }
+        dialogPlayText.setDepth(2);
 
         //set up the retry button
         let retry = this.add.sprite(game.config.width / 2 + (game.config.width / 2.5), 600, 'retry').setInteractive();
@@ -552,7 +561,6 @@ class successGame extends Phaser.Scene{
 
         retry.on('pointerup', function () {
             retry.clearTint();
-            console.log("replay this level");
             myTime = 0;
             startTimer = 0;
             stopTimer = false;
@@ -581,7 +589,6 @@ class successGame extends Phaser.Scene{
             if(levelIndex < randomOrder.length){
                 levelIndex++;
                 nextGame = false;
-                showVariables();
                 this.scene.start("PlayGame");
             } else {
 
@@ -590,36 +597,15 @@ class successGame extends Phaser.Scene{
 
         else if(goToMenu === true){
             this.scene.start("MenuGame");
-            showVariables();
             level = undefined;
         }
 
         else if(reset === true){
             this.scene.start("PlayGame");
-            showVariables();
             reset = false;
         }
 
     }
-}
-
-function showVariables() {
-    console.log(myTime);
-    console.log(startTimer);
-    console.log(reset);
-    console.log(startGame);
-    console.log(stopTimer);
-    console.log(stopMinutes);
-    console.log(stopSeconds);
-    console.log(displayDialog);
-    console.log(nextGame);
-    console.log(timeText.text);
-    console.log(gameTimer);
-    console.log(level);
-    console.log(levelIndex);
-    console.log(levelList);
-    console.log(sudokuMap);
-    console.log(goToMenu);
 }
 
 function onEvent(){
