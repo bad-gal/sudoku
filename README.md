@@ -1,4 +1,4 @@
-#Simple Sudoku
+**Simple Sudoku**
 
 **Game Objective**
 The objective is to fill a 9×9 grid with digits so that each column, each row, and each of 
